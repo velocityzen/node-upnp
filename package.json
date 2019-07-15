@@ -9,11 +9,14 @@
   "keywords": [
     "upnp",
     "media",
-    "client",
     "player",
     "tv",
     "music",
-    "dlna"
+    "dlna",
+    "iot",
+    "smart home",
+    "device",
+    "home automation"
   ],
   "repository": {
     "type": "git",
