@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+const { Client } = require('node-ssdp');
+const client = new Client();
+
+client.on('response', (headers, code) => {
+  console.log('Got a response to an search.', code, headers);
+});
+
+const serviceType = process.argv[2] || 'ssdp:all';
+client.search(serviceType);
+
+// have to wait for responses
+setTimeout(() => {
+  console.log('');
+}, 5000);
+
