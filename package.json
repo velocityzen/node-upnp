@@ -12,7 +12,8 @@
     "client",
     "player",
     "tv",
-    "music"
+    "music",
+    "dlna"
   ],
   "repository": {
     "type": "git",
