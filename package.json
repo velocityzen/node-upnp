@@ -1,6 +1,6 @@
 {
   "name": "node-upnp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Modern UPnP Client Library",
   "main": "index.js",
   "scripts": {
