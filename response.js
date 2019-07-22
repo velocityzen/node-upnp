@@ -124,7 +124,7 @@ function getStateVariables(serviceStateTable) {
   return Array.from(serviceStateTable.stateVariable).reduce((a, { name, __sendEvents, allowedValueList, ...fields }) => {
     a[name] = {
       ...fields,
-      sendEvents: __sendEvents,
+      sendEvents: __sendEvents !== 'no',
       allowedValues: getAllowedValues(allowedValueList)
     }
     return a;
