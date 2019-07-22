@@ -3,7 +3,7 @@
 [![NPM Version](https://img.shields.io/npm/v/node-upnp.svg?style=flat-square)](https://www.npmjs.com/package/node-upnp)
 [![NPM Downloads](https://img.shields.io/npm/dt/node-upnp.svg?style=flat-square)](https://www.npmjs.com/package/node-upnp)
 
-Modern UPnP client with async/await support and sane extansable codebase.
+Modern UPnP client with async/await support and sane extensible codebase.
 
 ## Install
 
