@@ -11,7 +11,10 @@ function getData(data) {
 
   return Object.keys(data).reduce((a, name) => {
     const value = data[name];
-    a[name] = (value === null) ? '' : value.toString();
+    if (value !== undefined) {
+      a[name] = (value === null) ? '' : value.toString();
+    }
+
     return a;
   }, {});
 }
