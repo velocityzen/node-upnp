@@ -3,6 +3,7 @@ const parser = require('fast-xml-parser');
 const code = {
   NO_SERVICE: 'NO_SERVICE',
   NO_ACTION: 'NO_ACTION',
+  NO_EVENTS: 'NO_EVENTS',
   UPNP: 'UPNP',
   SUBSCRIBE: 'SUBSCRIBE',
   SUBSCRIBE_RENEW: 'SUBSCRIBE_RENEW',
@@ -32,6 +33,12 @@ function UPnPError(statusCode, xmlString) {
   return err;
 }
 
+function NoEvents(variable) {
+  const err = new Error(`Variable ${variable} does not generate event messages`);
+  err.code = code.NO_EVENTS;
+  return err;
+}
+
 function Subscribe(statusCode) {
   const err = new Error('Subscription error');
   err.code = code.SUBSCRIBE;
@@ -57,6 +64,7 @@ module.exports = {
   code,
   NoService,
   NoAction,
+  NoEvents,
   UPnPError,
   Subscribe,
   SubscriptionRenewal,

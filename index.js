@@ -1,6 +1,8 @@
 const http = require('http');
 const os = require('os');
 const { URL } = require('url');
+const EventEmitter = require('events');
+
 const got = require('got');
 const concat = require('concat-stream');
 const address = require('network-address');
@@ -23,6 +25,9 @@ class UPnPClient {
     this.eventsServer = null;
     this.subscriptions = {};
 
+    this.eventEmitter = new EventEmitter();
+    this.handleStateUpdate = this.handleStateUpdate.bind(this);
+
     this.client = got.extend({
       headers: {
         'user-agent': userAgent
@@ -31,7 +36,6 @@ class UPnPClient {
   }
 
   async getDeviceDescription() {
-    // Use cache if available
     if (!this.deviceDescription) {
       const response = await this.client(this.url);
       this.deviceDescription = parseDeviceDescription(response.body, this.url);
@@ -40,15 +44,19 @@ class UPnPClient {
     return this.deviceDescription;
   }
 
-  async getServiceDescription(serviceId) {
+  async hasService(serviceId) {
     serviceId = resolveService(serviceId);
     const description = await this.getDeviceDescription();
 
-    const service = description.services[serviceId];
-    if (!service) {
+    return Boolean(description.services[serviceId]);
+  }
+
+  async getServiceDescription(serviceId) {
+    if (!(await this.hasService(serviceId))) {
       throw error.NoService(serviceId);
     }
 
+    const service = this.deviceDescription.services[serviceId];
     if (!this.serviceDescriptions[serviceId]) {
       const response = await this.client(service.SCPDURL);
       this.serviceDescriptions[serviceId] = parseServiceDescription(response.body);
@@ -57,10 +65,28 @@ class UPnPClient {
     return this.serviceDescriptions[serviceId];
   }
 
+  async getVariableServiceId(variable, force) {
+    const { services } = await this.getDeviceDescription();
+
+    for (const serviceId of Object.keys(services)) {
+      const { stateVariables } = await this.getServiceDescription(serviceId);
+      if (!stateVariables) {
+        continue;
+      }
+
+      for (const v in stateVariables) {
+        if (v === variable && (stateVariables[v].sendEvents || force === true)) {
+          return serviceId;
+        }
+      }
+    }
+  }
+
   async call(serviceId, actionName, data) {
     serviceId = resolveService(serviceId);
     const description = await this.getServiceDescription(serviceId);
-    if (!description.actions[actionName]) {
+    const action = description.actions[actionName];
+    if (!action) {
       throw error.NoAction(actionName);
     }
 
@@ -84,29 +110,56 @@ class UPnPClient {
       throw error.UPnPError(res.statusCode, res.body);
     }
 
-    const action = description.actions[actionName];
     const result = parseSOAPResponse(res.body, actionName, action.outputs);
-
     return result;
+  }
+
+  async on(variable, listener, options = {}) {
+    const serviceId = await this.getVariableServiceId(variable, options.force);
+    if (!serviceId) {
+      throw error.NoEvents(variable);
+    }
+
+    this.eventEmitter.on(variable, listener);
+    await this.subscribe(serviceId, this.handleStateUpdate);
+  }
+
+  async off(variable, listener) {
+    this.eventEmitter.off(variable, listener);
+    const serviceId = await this.getVariableServiceId(variable, true);
+    await this.unsubscribe(serviceId, this.handleStateUpdate);
+  }
+
+  emit(...args) {
+    this.eventEmitter.emit(...args);
+  }
+
+  async removeAllListeners() {
+    this.eventEmitter.removeAllListeners();
+    await this.clearSubscriptions();
+  }
+
+  handleStateUpdate(e) {
+    this.eventEmitter.emit(e.name, e.value);
   }
 
   async subscribe(serviceId, listener) {
     serviceId = resolveService(serviceId);
 
-    if (this.subscriptions[serviceId]) {
-      this.subscriptions[serviceId].listeners.push(listener);
+    const subs = this.subscriptions[serviceId];
+    if (subs) {
+      if (!subs.listeners.includes(listener)) {
+        this.subscriptions[serviceId].listeners.push(listener);
+      }
       return;
     }
 
-    const deviceDescription = await this.getDeviceDescription();
-    const service = deviceDescription.services[serviceId];
-
-    if (!service) {
+    if (!(await this.hasService(serviceId))) {
       throw error.NoService(serviceId);
     }
 
+    const service = this.deviceDescription.services[serviceId];
     const server = await this.getEventsServer();
-
     const url = new URL(service.eventSubURL);
     const res = await this.client({
       url,

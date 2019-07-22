@@ -94,3 +94,39 @@ test.serial('test subscribtion. volume', async t => {
   await client.unsubscribe('RenderingControl', handler);
   t.is(client.hasSubscriptions(), false);
 });
+
+test.serial('get the serviceId by state variable', async t => {
+  const serviceId1 = await client.getVariableServiceId('NOT_EXIST');
+  t.is(serviceId1, undefined);
+
+  const serviceId2 = await client.getVariableServiceId('SourceProtocolInfo');
+  t.is(serviceId2, 'urn:upnp-org:serviceId:ConnectionManager');
+
+  const serviceId3 = await client.getVariableServiceId('Volume');
+  t.is(serviceId3, undefined);
+
+  const serviceId4 = await client.getVariableServiceId('Volume', true);
+  t.is(serviceId4, 'urn:upnp-org:serviceId:RenderingControl');
+});
+
+test.serial('test on/off methods', async t => {
+  function handler(volume) {
+    t.is(typeof volume, 'number');
+  }
+
+  await client.on('Volume', handler, { force: true });
+  const result = await client.call('RenderingControl', 'GetVolume', {
+    InstanceID: 0,
+    Channel: 'Master'
+  });
+  const volume = result.CurrentVolume;
+  await client.call('RenderingControl', 'SetVolume', {
+    InstanceID: 0,
+    Channel: 'Master',
+    DesiredVolume: volume + 1
+  });
+
+  await client.off('Volume', handler);
+
+  t.is(client.hasSubscriptions(), false);
+});

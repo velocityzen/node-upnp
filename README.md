@@ -52,4 +52,16 @@ returns `true/false` is the client has any active subscriptions
 
 clears all subscriptions
 
+### async on(variable, listener, options = {})
+
+subscribes on the variable change event. Options:
+
+* force — Boolean, when true, subscribes on the service even if variable is `sendEvents='no'` in the service description. This options is for variable included in `LastChange` event.
+
+### async off(variable, listener)
+
+### emit(...args)
+
+### async removeAllListeners()
+
 License MIT

@@ -13,7 +13,6 @@ function formatTime(seconds) {
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
-
 function parseTime(time) {
   if (!time) {
     return 0
