@@ -2,11 +2,20 @@
 const { Client } = require('node-ssdp');
 const client = new Client();
 
-client.on('response', (headers, code) => {
-  console.log('Got a response to an search.', code, headers);
+const IP = process.argv[2];
+
+client.on('response', (headers, code, info) => {
+  if (IP) {
+    if (info.address === IP) {
+      console.log(headers);
+    }
+    return;
+  }
+
+  console.log(info.address, headers);
 });
 
-const serviceType = process.argv[2] || 'ssdp:all';
+const serviceType = 'ssdp:all';
 client.search(serviceType);
 
 // have to wait for responses
