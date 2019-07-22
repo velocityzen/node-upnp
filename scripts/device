@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+const UPnPClient = require('../index');
+const client = new UPnPClient({
+  url: process.argv[2]
+});
+
+async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index++) {
+    //eslint-disable-next-line no-await-in-loop
+    await callback(array[index], index, array);
+  }
+}
+
+(async() => {
+  const desc = await client.getDeviceDescription();
+  console.log('Device', desc);
+
+  await asyncForEach(Object.keys(desc.services), async serviceId => {
+    const serviceDesc = await client.getServiceDescription(serviceId);
+
+    console.log('\n>>', serviceId);
+    console.dir(serviceDesc, { depth: 10 });
+  });
+})();
