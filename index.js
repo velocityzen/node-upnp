@@ -8,11 +8,19 @@ const concat = require('concat-stream');
 const address = require('network-address');
 const version = require('./package.json');
 
-const DEFAULT_USER_AGENT = `${os.platform()}/${os.release()} UPnP/1.1 ${version.name}/${version.version}`;
+const DEFAULT_USER_AGENT = `${os.platform()}/${os.release()} UPnP/1.1 ${
+  version.name
+}/${version.version}`;
 const SUBSCRIPTION_TIMEOUT = 300;
 const SUBSCRIPTION_TIMEOUT_MIN = 30;
 
-const { parseDeviceDescription, parseServiceDescription, parseSOAPResponse, parseEvents, parseTimeout } = require('./response');
+const {
+  parseDeviceDescription,
+  parseServiceDescription,
+  parseSOAPResponse,
+  parseEvents,
+  parseTimeout
+} = require('./response');
 const { createSOAPAction } = require('./request');
 const { resolveService } = require('./util');
 const error = require('./error');
@@ -59,7 +67,9 @@ class UPnPClient {
     const service = this.deviceDescription.services[serviceId];
     if (!this.serviceDescriptions[serviceId]) {
       const response = await this.client(service.SCPDURL);
-      this.serviceDescriptions[serviceId] = parseServiceDescription(response.body);
+      this.serviceDescriptions[serviceId] = parseServiceDescription(
+        response.body
+      );
     }
 
     return this.serviceDescriptions[serviceId];
@@ -75,7 +85,10 @@ class UPnPClient {
       }
 
       for (const v in stateVariables) {
-        if (v === variable && (stateVariables[v].sendEvents || force === true)) {
+        if (
+          v === variable &&
+          (stateVariables[v].sendEvents || force === true)
+        ) {
           return serviceId;
         }
       }
@@ -101,8 +114,8 @@ class UPnPClient {
       headers: {
         'Content-Type': 'text/xml; charset="utf-8"',
         'Content-Length': SOAPAction.length,
-        'Connection': 'close',
-        'SOAPACTION': `"${service.serviceType}#${actionName}"`
+        Connection: 'close',
+        SOAPACTION: `"${service.serviceType}#${actionName}"`
       }
     });
 
@@ -166,12 +179,14 @@ class UPnPClient {
       throwHttpErrors: false,
       method: 'SUBSCRIBE',
       headers: {
-        'HOST': url.host,
-        'CALLBACK': `<http://${server.address().address}:${server.address().port}/>`,
-        'NT': 'upnp:event',
-        'TIMEOUT': `Second-${SUBSCRIPTION_TIMEOUT}`
+        HOST: url.host,
+        CALLBACK: `<http://${server.address().address}:${
+          server.address().port
+        }/>`,
+        NT: 'upnp:event',
+        TIMEOUT: `Second-${SUBSCRIPTION_TIMEOUT}`
       }
-    })
+    });
 
     if (res.statusCode !== 200) {
       this.stopEventsServer();
@@ -179,16 +194,27 @@ class UPnPClient {
     }
 
     const { sid, timeout } = res.headers;
-    const renewTimeout = Math.max(parseTimeout(timeout) - SUBSCRIPTION_TIMEOUT_MIN, SUBSCRIPTION_TIMEOUT_MIN);
+    const renewTimeout = Math.max(
+      parseTimeout(timeout) - SUBSCRIPTION_TIMEOUT_MIN,
+      SUBSCRIPTION_TIMEOUT_MIN
+    );
 
-    const timer = setTimeout(() => this.renewSubscription({
-      url, sid, serviceId
-    }), renewTimeout * 1000);
+    const timer = setTimeout(
+      () =>
+        this.renewSubscription({
+          url,
+          sid,
+          serviceId
+        }),
+      renewTimeout * 1000
+    );
 
     this.subscriptions[serviceId] = {
-      sid, url, timer,
-      listeners: [ listener ]
-    }
+      sid,
+      url,
+      timer,
+      listeners: [listener]
+    };
   }
 
   async unsubscribe(serviceId, listener) {
@@ -235,9 +261,9 @@ class UPnPClient {
       throwHttpErrors: false,
       method: 'SUBSCRIBE',
       headers: {
-        'HOST': url.host,
-        'SID': sid,
-        'TIMEOUT': `Second-${SUBSCRIPTION_TIMEOUT}`
+        HOST: url.host,
+        SID: sid,
+        TIMEOUT: `Second-${SUBSCRIPTION_TIMEOUT}`
       }
     });
 
@@ -247,10 +273,19 @@ class UPnPClient {
     }
 
     const timeout = parseTimeout(res.headers.timeout);
-    const renewTimeout = Math.max(timeout - SUBSCRIPTION_TIMEOUT_MIN, SUBSCRIPTION_TIMEOUT_MIN); // renew 30 seconds before expiration
-    const timer = setTimeout(() => this.renewSubscription({
-      url, sid, serviceId
-    }), renewTimeout * 1000);
+    const renewTimeout = Math.max(
+      timeout - SUBSCRIPTION_TIMEOUT_MIN,
+      SUBSCRIPTION_TIMEOUT_MIN
+    ); // renew 30 seconds before expiration
+    const timer = setTimeout(
+      () =>
+        this.renewSubscription({
+          url,
+          sid,
+          serviceId
+        }),
+      renewTimeout * 1000
+    );
     this.subscriptions[serviceId].timer = timer;
   }
 
@@ -262,7 +297,7 @@ class UPnPClient {
     if (!this.eventsServer.listening) {
       await new Promise(resolve => {
         this.eventsServer.listen(0, address.ipv4(), resolve);
-      })
+      });
     }
 
     return this.eventsServer;
@@ -307,6 +342,5 @@ class UPnPClient {
     this.stopEventsServer();
   }
 }
-
 
 module.exports = UPnPClient;
