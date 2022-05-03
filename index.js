@@ -304,9 +304,11 @@ class UPnPClient {
   }
 
   createEventsServer() {
-    return http.createServer(req =>
-      req.pipe(concat(buf => this.eventsServerRequestHandler(req, buf)))
-    );
+    return http.createServer((req, res) => {
+      req.pipe(concat(buf => this.eventsServerRequestHandler(req, buf)));
+      res.statusCode = 200;
+      res.end('OK')
+    });
   }
 
   eventsServerRequestHandler(req, buf) {
