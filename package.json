@@ -27,7 +27,7 @@
   "dependencies": {
     "concat-stream": "^2.0.0",
     "fast-xml-parser": "^3.16.0",
-    "got": "^10.6.0",
+    "got": "^11.8.5",
     "he": "^1.2.0",
     "network-address": "^1.1.2",
     "node-ssdp": "^4.0.0"
