@@ -79,6 +79,10 @@ class UPnPClient {
     const { services } = await this.getDeviceDescription();
 
     for (const serviceId of Object.keys(services)) {
+	// FIXME: how to distinguish beetween a variable in 2 services like Metadata
+      if(serviceId==='urn:av-openhome-org:serviceId:Radio'){
+        continue;
+      }
       const { stateVariables } = await this.getServiceDescription(serviceId);
       if (!stateVariables) {
         continue;
