@@ -167,10 +167,15 @@ function parseEventInstance({ __val, ...events }) {
 
 function parseEventsProperties(prop) {
   const entry = Object.entries(prop);
-  return {
-    name: entry[0],
-    value: entry[1]
-  }
+    // handle multiple props
+    let ret = [];
+    entry.forEach(e=>{
+        ret.push({
+            name: e[0],
+            value: e[1]
+      })
+    })
+    return ret
 }
 
 function parseEvents(buf) {
@@ -188,8 +193,8 @@ function parseEvents(buf) {
     const instances = Array.isArray(InstanceID) ? InstanceID : [ InstanceID ];
     return instances.map(parseEventInstance).flat();
   }
-
-  return props.map(parseEventsProperties)
+  // HANDLE single result 
+  return Array.isArray(props) ? props.map(parseEventsProperties).flat() : [ props ].map(parseEventsProperties).flat();
 }
 
 function parseTimeout(header) {
