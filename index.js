@@ -304,9 +304,12 @@ class UPnPClient {
   }
 
   createEventsServer() {
-    return http.createServer(req =>
-      req.pipe(concat(buf => this.eventsServerRequestHandler(req, buf)))
-    );
+    return http.createServer( (req, res) => {
+      req.pipe(concat(buf => this.eventsServerRequestHandler(req, buf)));
+      // return response OK -- Pair could stop sending events
+      res.writeHead(200, {'Content-Type': 'text/xml'});
+      res.end();
+    });
   }
 
   eventsServerRequestHandler(req, buf) {
