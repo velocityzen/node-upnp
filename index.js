@@ -200,12 +200,7 @@ class UPnPClient {
     );
 
     const timer = setTimeout(
-      () =>
-        this.renewSubscription({
-          url,
-          sid,
-          serviceId
-        }),
+      this.retrySubscriptionUntilSuccess.bind(this, { url, sid, serviceId }),
       renewTimeout * 1000
     );
 
@@ -255,6 +250,18 @@ class UPnPClient {
     this.stopEventsServer();
   }
 
+  async retrySubscriptionUntilSuccess({ url, sid, serviceId }) {
+    // Stop retrying if subscription no longer exists
+    if (!this.subscriptions[serviceId]) return;
+    try {
+      this.renewSubscription({ url, sid, serviceId });
+    } catch (e) {
+      console.warn(`Error on renewal: ${e}. Retrying in 5 seconds...`);
+      const timer = setTimeout(this.retrySubscriptionUntilSuccess.bind(this, { url, sid, serviceId }), 5000);
+      this.subscriptions[serviceId].timer = timer;
+    }
+  }
+
   async renewSubscription({ url, sid, serviceId }) {
     const res = await this.client({
       url,
@@ -278,13 +285,8 @@ class UPnPClient {
       SUBSCRIPTION_TIMEOUT_MIN
     ); // renew 30 seconds before expiration
     const timer = setTimeout(
-      () =>
-        this.renewSubscription({
-          url,
-          sid,
-          serviceId
-        }),
-      renewTimeout * 1000
+      this.retrySubscriptionUntilSuccess.bind(this, { url, sid, serviceId }),
+      renewTimeout * 1000,
     );
     this.subscriptions[serviceId].timer = timer;
   }
