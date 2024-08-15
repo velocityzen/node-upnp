@@ -4,7 +4,8 @@
   "description": "Modern UPnP Client Library",
   "main": "index.js",
   "scripts": {
-    "test": "nyc ava"
+    "test": "nyc ava",
+    "release": "release-it"
   },
   "keywords": [
     "upnp",
@@ -33,7 +34,8 @@
     "node-ssdp": "^4.0.0"
   },
   "devDependencies": {
-    "ava": "^3.0.0",
-    "nyc": "^15.0.0"
+    "ava": "^6.0.0",
+    "nyc": "^17.0.0",
+    "release-it": "^17.6.0"
   }
 }
